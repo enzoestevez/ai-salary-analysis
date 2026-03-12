@@ -1,41 +1,31 @@
+from src.ai_agent import ask_ai_about_dataset
 import os
 
-def generate_text_report(df):
+def generate_text_report(df, ai_context=None, user_question="generate full report"):
     """
-    Generate a simple textual report with insights from the dataset
+    Genera un reporte de texto con análisis descriptivo y con IA.
     """
-
     lines = []
 
-    # Salary overview
+    # Insights clásicos
     avg_salary = df["salary_in_usd"].mean()
     lines.append(f"Average salary across all roles: ${avg_salary:,.2f}")
 
-    # Salary by experience level
+    # Más análisis
     exp_avg = df.groupby("experience_level")["salary_in_usd"].mean()
     for level, sal in exp_avg.items():
         lines.append(f"Average salary for {level} level: ${sal:,.2f}")
 
-    # Salary by company size
-    size_avg = df.groupby("company_size")["salary_in_usd"].mean()
-    for size, sal in size_avg.items():
-        lines.append(f"Average salary for company size {size}: ${sal:,.2f}")
+    # Usamos IA para generar insights más analíticos
+    if ai_context:
+        ai_insights = ask_ai_about_dataset(ai_context, user_question)
+        lines.append("\nAI Insights:")
+        lines.append(ai_insights)
 
-    # Remote work
-    remote_avg = df.groupby("remote_ratio")["salary_in_usd"].mean()
-    for ratio, sal in remote_avg.items():
-        lines.append(f"Average salary for remote ratio {ratio}%: ${sal:,.2f}")
-
-    # Top paying jobs
-    top_jobs = df.groupby("job_title")["salary_in_usd"].mean().sort_values(ascending=False).head(5)
-    lines.append("Top 5 highest paying jobs:")
-    for job, sal in top_jobs.items():
-        lines.append(f"- {job}: ${sal:,.2f}")
-
-    # Save to file
+    # Guardar reporte
     os.makedirs("outputs", exist_ok=True)
     report_path = "outputs/report.txt"
-    with open(report_path, "w") as f:
+    with open(report_path, "w", encoding="utf-8") as f:
         for line in lines:
             f.write(line + "\n")
 
